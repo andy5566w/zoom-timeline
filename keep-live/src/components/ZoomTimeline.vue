@@ -59,6 +59,9 @@
       </div>
     </section>
     {{ JSON.stringify(showDate) }}
+    <div>
+      {{ JSON.stringify(clipItems) }}
+    </div>
   </div>
 </template>
 
@@ -115,6 +118,20 @@ export default {
           this.currentUnit.width *
             (this.videoData.originalDuration / this.currentUnit.time) +
           'px',
+      }
+    },
+    clipItems() {
+      if (this.videoData.originalDuration === 0) return []
+      else {
+        return this.splitsArray.reduce((a, c, index) => {
+          if (index === 0) return a.concat({ startTime: 0, endTime: c })
+          else if (index === this.splitsArray.length - 1)
+            return a.concat({
+              startTime: a[index - 1].endTime,
+              endTime: this.videoData.originalDuration,
+            })
+          return a.concat({ startTime: a[index - 1].endTime, endTime: c })
+        }, [])
       }
     },
     v_on_container() {
@@ -174,6 +191,7 @@ export default {
       )
       if (!this.splitsArray.find((n) => n === splitPoint)) {
         this.splitsArray.push(splitPoint)
+        this.splitsArray.sort()
       }
     },
     // maybe be abandoned after implementing
