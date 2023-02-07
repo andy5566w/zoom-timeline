@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div class="nextTick">
+    <input type="text" name="" id="" :value="value" @input="handleInput">
     <p ref="text">文字{{ text }}</p>
     <button @click="send">送出</button>
   </div>
@@ -8,6 +9,11 @@
 <script>
 export default {
   name: 'nextTick',
+  props:{
+    value: {
+      type: String
+    }
+  },
   data() {
     return {
       text: '送出前',
@@ -20,6 +26,10 @@ export default {
     })
   },
   methods: {
+    handleInput(e){
+      console.log(e)
+      this.$emit('input', e.target.value)
+    },
     send() {
       this.text = '送出後'
       this.$nextTick(function () {
@@ -32,4 +42,8 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style >
+.nextTick{
+  border:1px solid red;
+}
+</style>
