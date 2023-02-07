@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="currentTimeThumb"
-    :style="currentStyle"
-    v-on="v_on_currentTimeThumb"
-  ></div>
+  <div class="currentTimeThumb" :style="currentStyle"></div>
 </template>
 
 <script>

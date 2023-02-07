@@ -1,43 +1,46 @@
 <template>
   <div>
-    <section
-      class="overflow-y-auto p-10 relative"
-      :style="containerStyle"
-      v-on="v_on_container"
-    >
-      <div class="flex justify-start">
-        <input
-          @change="handleLoadVideo"
-          class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-          id="file_input"
-          type="file"
-        />
+    <div class="flex justify-start gap-4">
+      <input
+        @change="handleLoadVideo"
+        class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+        id="file_input"
+        type="file"
+      />
 
-        <button
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded decrease"
-          @click="timeLineData.currentIndex--"
-          :class="{
-            'opacity-50': timeLineData.currentIndex === 0,
-          }"
-          :disabled="timeLineData.currentIndex === 0"
-        >
-          -
-        </button>
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded decrease"
+        @click="timeLineData.currentIndex--"
+        :class="{
+          'opacity-50': timeLineData.currentIndex === 0,
+        }"
+        :disabled="timeLineData.currentIndex === 0"
+      >
+        -
+      </button>
 
-        <button
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded increase"
-          :class="{
-            'opacity-50':
-              timeLineData.currentIndex === timeLineData.breakpoints.length - 1,
-          }"
-          :disabled="
-            timeLineData.currentIndex === timeLineData.breakpoints.length - 1
-          "
-          @click="timeLineData.currentIndex++"
-        >
-          +
-        </button>
-      </div>
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded increase"
+        :class="{
+          'opacity-50':
+            timeLineData.currentIndex === timeLineData.breakpoints.length - 1,
+        }"
+        :disabled="
+          timeLineData.currentIndex === timeLineData.breakpoints.length - 1
+        "
+        @click="timeLineData.currentIndex++"
+      >
+        +
+      </button>
+
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        @click="handleSplit"
+      >
+        split
+      </button>
+    </div>
+    <section class="overflow-x-auto py-10 relative" v-on="v_on_container">
       <ZoomCurrentTimeThumb
         ref="ZoomCurrentTimeThumb"
         :offsetLeftDistance="offsetLeftDistance"
@@ -63,12 +66,12 @@
 import ZoomCurrentTimeThumb from './ZoomCurrentTimeThumb.vue'
 import ZoomRuler from '@/components/ZoomRuler.vue'
 // import ZoomVideoClip from './ZoomVideoClip.vue'
+import { floor } from 'lodash'
 export default {
   name: 'ZoomTimeline',
   components: { ZoomCurrentTimeThumb, ZoomRuler },
   data() {
     const timeLineData = {
-      lineHeigh: 10,
       breakpoints: [
         { width: 15, time: 0.1, unit: '1s' },
         { width: 15, time: 1, unit: '10s' },
@@ -98,6 +101,7 @@ export default {
       timeLineData,
       videoData,
       box,
+      splitsArray: [],
       offsetLeftDistance: 200,
     }
   },
@@ -113,27 +117,16 @@ export default {
           'px',
       }
     },
-    containerStyle() {
-      const _width = this.convertTimeIntoWidth(this.videoData.originalDuration)
-      const width =
-        _width === 0 || _width < window.innerWidth ? window.innerWidth : width
-      return {
-        width: width + 'px',
-      }
-    },
     v_on_container() {
       return {
         mousemove: this.handleMouseMove,
-        mousedown: (event) => {
-          this.timeLineData.isClickCurrentTimeThumb = event.target.hasAttribute(
-            'js-zoom-ruler'
-          )
+        mousedown: () => {
+          this.timeLineData.isClickCurrentTimeThumb = true
         },
         mouseup: () => (this.timeLineData.isClickCurrentTimeThumb = false),
         click: (event) => {
           if (event.target.hasAttribute('js-zoom-ruler')) {
-            this.offsetLeftDistance =
-              event.clientX - 40 <= 0 ? 0 : event.clientX - 40
+            this.offsetLeftDistance = event.offsetX <= 0 ? 0 : event.offsetX
           }
         },
       }
@@ -143,6 +136,7 @@ export default {
       return {
         ...this.currentUnit,
         ...this.videoData,
+        splitsArray: this.splitsArray,
         ISOStringTime: new Date(this.videoData.originalDuration * 1000)
           .toISOString()
           .substring(11, 19),
@@ -162,10 +156,24 @@ export default {
     convertTimeIntoWidth(time) {
       return this.currentUnit.width * (time / this.currentUnit.time)
     },
+    convertOffsetLeftDistanceIntoTime(width) {
+      return this.currentUnit.time * (width / this.currentUnit.width)
+    },
     handleMouseMove(event) {
-      if (this.timeLineData.isClickCurrentTimeThumb) {
-        this.offsetLeftDistance =
-          event.clientX - 40 <= 0 ? 0 : event.clientX - 40
+      if (
+        this.timeLineData.isClickCurrentTimeThumb &&
+        event.target.hasAttribute('js-zoom-ruler')
+      ) {
+        this.offsetLeftDistance = event.offsetX <= 0 ? 0 : event.offsetX
+      }
+    },
+    handleSplit() {
+      const splitPoint = floor(
+        this.convertOffsetLeftDistanceIntoTime(this.offsetLeftDistance),
+        2
+      )
+      if (!this.splitsArray.find((n) => n === splitPoint)) {
+        this.splitsArray.push(splitPoint)
       }
     },
     // maybe be abandoned after implementing
