@@ -1,5 +1,5 @@
 <template>
-  <div class="zoom-ruler-wrap">
+  <div class="zoom-ruler-wrap w-full">
     <canvas id="canvas" ref="canvas" js-zoom-ruler></canvas>
   </div>
 </template>
@@ -19,6 +19,7 @@ export default {
     return {
       canvasHeight: 80,
       lineHeight: 10,
+      lineWidth: 2,
       ctx: null,
       canvas: null,
       V: new Vector(15, 0),
@@ -32,22 +33,24 @@ export default {
       this.canvas.height = this.canvasHeight
       this.ctx = this.canvas.getContext('2d')
       this.ctx.strokeStyle = '#9397A6'
-      this.ctx.lineWidth = 2
+      this.ctx.lineWidth = this.lineWidth
     },
     drawVerticalLine() {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
       this.ctx.save()
-      this.ctx.translate(0, this.canvasHeight / 2)
+      this.ctx.translate(this.lineWidth / 2, this.canvasHeight / 2)
       let H = this.lineHeight
       //   const MAX =  window.innerWidth
-      const MAX = 5000
+      const MAX = 10000
       for (let i = 0; MAX >= this.V.x * i; i++) {
         this.ctx.beginPath()
-        this.ctx.translate(this.V.x, this.V.y)
+        if (i !== 0) {
+          this.ctx.translate(this.V.x, this.V.y)
+        }
         if (i % 10 === 0) {
           H = this.lineHeight * 1.5
           this.ctx.font = '12px Arial'
-          this.ctx.fillText(this.getSecond(i), -6, H / 2 + 15)
+          this.ctx.fillText(this.getSecond(i), 0, H / 2 + 15)
         } else {
           H = this.lineHeight
         }

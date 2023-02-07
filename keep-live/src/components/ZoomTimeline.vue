@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="p-3">
     <div class="flex justify-start gap-4">
       <input
         @change="handleLoadVideo"
@@ -49,17 +49,18 @@
 
       <ZoomRuler :currentUnit="currentUnit" />
 
-      <div class="overflow-y-auto" :style="{ 'padding-left': '15px' }">
-        <div
-          class="border border-sky-500 transition duration-150 ease-in-out"
-          :style="boxStyle"
-        >
-          video
-        </div>
+      <div>
+        <ZoomVideoClipItem
+          v-for="item in clipItems"
+          v-bind="item"
+          :current-unit="currentUnit"
+          :video-end-time="videoData.originalDuration"
+          :key="item.key"
+        />
       </div>
     </section>
     {{ JSON.stringify(showDate) }}
-    <div>
+    <div class="w-20">
       {{ JSON.stringify(clipItems) }}
     </div>
   </div>
@@ -68,11 +69,11 @@
 <script>
 import ZoomCurrentTimeThumb from './ZoomCurrentTimeThumb.vue'
 import ZoomRuler from '@/components/ZoomRuler.vue'
-// import ZoomVideoClip from './ZoomVideoClip.vue'
+import ZoomVideoClipItem from '@/components/ZoomVideoClipItem.vue'
 import { floor } from 'lodash'
 export default {
   name: 'ZoomTimeline',
-  components: { ZoomCurrentTimeThumb, ZoomRuler },
+  components: { ZoomCurrentTimeThumb, ZoomRuler, ZoomVideoClipItem },
   data() {
     const timeLineData = {
       breakpoints: [
@@ -112,27 +113,18 @@ export default {
     currentUnit() {
       return this.timeLineData.breakpoints[this.timeLineData.currentIndex]
     },
-    boxStyle() {
-      return {
-        width:
-          this.currentUnit.width *
-            (this.videoData.originalDuration / this.currentUnit.time) +
-          'px',
-      }
-    },
     clipItems() {
-      if (this.videoData.originalDuration === 0) return []
-      else {
-        return this.splitsArray.reduce((a, c, index) => {
-          if (index === 0) return a.concat({ startTime: 0, endTime: c })
-          else if (index === this.splitsArray.length - 1)
-            return a.concat({
-              startTime: a[index - 1].endTime,
-              endTime: this.videoData.originalDuration,
-            })
-          return a.concat({ startTime: a[index - 1].endTime, endTime: c })
-        }, [])
-      }
+      return this.splitsArray.reduce((a, c, index) => {
+        const key = Math.random().toString(16).slice(2)
+        if (index === 0) return a.concat({ startTime: 0, endTime: c, key })
+        else if (index === this.splitsArray.length - 1)
+          return a.concat({
+            startTime: a[index - 1].endTime,
+            endTime: floor(this.videoData.originalDuration, 2),
+            key,
+          })
+        return a.concat({ startTime: a[index - 1].endTime, endTime: c, key })
+      }, [])
     },
     v_on_container() {
       return {
@@ -160,15 +152,36 @@ export default {
       }
     },
   },
-  watch: {
-    'timeLineData.currentIndex'() {},
-  },
   methods: {
     async handleLoadVideo(e) {
       const file = e.target.files[0]
       this.videoData.originalDuration = await this.getDuration(
         new Audio(URL.createObjectURL(file))
       )
+      if (this.videoData.originalDuration > 3600) {
+        this.timeLineData.currentIndex = 11
+      } else if (this.videoData.originalDuration > 1800) {
+        this.timeLineData.currentIndex = 10
+      } else if (this.videoData.originalDuration > 1200) {
+        this.timeLineData.currentIndex = 9
+      } else if (this.videoData.originalDuration > 600) {
+        this.timeLineData.currentIndex = 8
+      } else if (this.videoData.originalDuration > 300) {
+        this.timeLineData.currentIndex = 7
+      } else if (this.videoData.originalDuration > 170) {
+        this.timeLineData.currentIndex = 6
+      } else if (this.videoData.originalDuration > 120) {
+        this.timeLineData.currentIndex = 5
+      } else if (this.videoData.originalDuration > 60) {
+        this.timeLineData.currentIndex = 4
+      } else if (this.videoData.originalDuration > 30) {
+        this.timeLineData.currentIndex = 3
+      } else if (this.videoData.originalDuration > 20) {
+        this.timeLineData.currentIndex = 2
+      } else if (this.videoData.originalDuration > 10) {
+        this.timeLineData.currentIndex = 1
+      }
+      this.splitsArray = [this.videoData.originalDuration]
     },
     convertTimeIntoWidth(time) {
       return this.currentUnit.width * (time / this.currentUnit.time)
