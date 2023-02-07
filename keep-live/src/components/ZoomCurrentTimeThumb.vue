@@ -1,5 +1,9 @@
 <template>
-  <div class="currentTimeThumb" :style="currentStyle"></div>
+  <div
+    class="currentTimeThumb"
+    :style="currentStyle"
+    v-on="v_on_currentTimeThumb"
+  ></div>
 </template>
 
 <script>
@@ -7,12 +11,31 @@ export default {
   name: 'ZoomCurrentTimeThumb',
   props: {
     offsetLeftDistance: Number,
+    currentUnit: Object,
   },
   computed: {
     currentStyle() {
       return {
         transform: `translateX(${this.offsetLeftDistance}px)`,
       }
+    },
+    v_on_currentTimeThumb() {
+      return {
+        mousedown: this.handleMouseDown,
+        mousemove: this.handleMouseMove,
+        mouseup: this.handleMouseUp,
+      }
+    },
+  },
+  methods: {
+    handleMouseDown(e) {
+      console.log(e)
+    },
+    handleMouseMove(e) {
+      console.log(e)
+    },
+    handleMouseUp(e) {
+      console.log(e)
     },
   },
 }
@@ -25,6 +48,5 @@ export default {
   background-color: red;
   position: absolute;
   top: 0;
-  transition: all 0.2s;
 }
 </style>

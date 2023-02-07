@@ -1,6 +1,12 @@
 <template>
   <div>
-    <section class="overflow-y-auto p-10 relative" :style="containerStyle">
+    <section
+      class="overflow-y-auto p-10 relative"
+      :style="containerStyle"
+      @mousemove="handleMouseMove"
+      @mousedown="timeLineData.isClickCurrentTimeThumb = true"
+      @mouseup="timeLineData.isClickCurrentTimeThumb = false"
+    >
       <div class="flex justify-start">
         <input
           @change="handleLoadVideo"
@@ -34,7 +40,11 @@
           +
         </button>
       </div>
-      <ZoomCurrentTimeThumb :offsetLeftDistance="offsetLeftDistance" />
+      <ZoomCurrentTimeThumb
+        ref="ZoomCurrentTimeThumb"
+        :offsetLeftDistance="offsetLeftDistance"
+        :currentUnit="currentUnit"
+      />
       <canvas id="canvas" ref="canvas"></canvas>
       <div class="overflow-y-auto" :style="{ 'padding-left': '15px' }">
         <div
@@ -50,51 +60,7 @@
 </template>
 
 <script>
-class Vector {
-  constructor(x, y) {
-    this.x = x
-    this.y = y
-  }
-  set(x, y) {
-    this.x = x
-    this.y = y
-  }
-  add(v) {
-    return new Vector(this.x + v.x, this.y + v.y)
-  }
-  sub(v) {
-    return this.add(v.mul(-1))
-  }
-  mul(s) {
-    return new Vector(this.x * s, this.y * s)
-  }
-  move(x, y) {
-    this.x += x
-    this.y += y
-    return this
-  }
-  get length() {
-    return Math.sqrt(this.x * this.x + this.y * this.y)
-  }
-  clone() {
-    return new Vector(this.x, this.y)
-  }
-  toString() {
-    return `(${this.x},${this.y})`
-  }
-  equal(v) {
-    return this.x == v.x && this.y == v.y
-  }
-  get angle() {
-    return Math.atan2(this.y, this.x)
-  }
-  get degree() {
-    return (360 * this.angle) / 2 / Math.PI
-  }
-  get unit() {
-    return this.mul(1 / this.length)
-  }
-}
+import Vector from '@/js/Vector'
 import ZoomCurrentTimeThumb from './ZoomCurrentTimeThumb.vue'
 // import ZoomVideoClip from './ZoomVideoClip.vue'
 export default {
@@ -103,10 +69,6 @@ export default {
   mounted() {
     this.initialCanvas()
     this.drawVerticalLine()
-    setInterval(() => {
-      this.offsetLeftDistance += 10
-      console.log(this.offsetLeftDistance)
-    }, 500)
   },
   data() {
     const timeLineData = {
@@ -126,6 +88,7 @@ export default {
         { width: 15, time: 360, unit: '60min' },
       ],
       currentIndex: 0,
+      isClickCurrentTimeThumb: false,
     }
 
     const videoData = {
@@ -168,11 +131,9 @@ export default {
       }
     },
     containerStyle() {
-      let width =
-        this.currentUnit.width *
-        (this.videoData.originalDuration / this.currentUnit.time)
-      width =
-        width === 0 || width < window.innerWidth ? window.innerWidth : width
+      const _width = this.convertTimeIntoWidth(this.videoData.originalDuration)
+      const width =
+        _width === 0 || _width < window.innerWidth ? window.innerWidth : width
       return {
         width: width + 'px',
       }
@@ -187,7 +148,6 @@ export default {
   methods: {
     async handleLoadVideo(e) {
       const file = e.target.files[0]
-      console.log(file)
       this.videoData.originalDuration = await this.getDuration(
         new Audio(URL.createObjectURL(file))
       )
@@ -231,13 +191,21 @@ export default {
         .toISOString()
         .substring(11, 19)} (${distance})`
     },
+    convertTimeIntoWidth(time) {
+      return this.currentUnit.width * (time / this.currentUnit.time)
+    },
+    handleMouseMove(e) {
+      if (this.timeLineData.isClickCurrentTimeThumb) {
+        this.offsetLeftDistance = e.clientX - 40 <= 0 ? 0 : e.clientX - 40
+      }
+    },
     // maybe be abandoned after implementing
     getDuration(element) {
       return new Promise((resolve) => {
         element.addEventListener(
           'durationchange',
           function () {
-            if (this.duration != Infinity) {
+            if (this.duration !== Infinity) {
               const duration = this.duration
               element.remove()
               resolve(duration)
@@ -251,8 +219,4 @@ export default {
   },
 }
 </script>
-<style scoped>
-.box {
-  border: 1px solid #ccc;
-}
-</style>
+<style scoped></style>
