@@ -1,9 +1,9 @@
 <template>
-  <div class="zoom-clip-wrap select-none" :style="zoomClipWrapStyle">
-    <div class="border border-sky-500 transition duration-150 ease-in-out">
-      video
-    </div>
-  </div>
+  <div
+    v-on="$listeners"
+    class="zoom-clip-wrap select-none"
+    :style="zoomClipWrapStyle"
+  ></div>
 </template>
 
 <script>
@@ -18,12 +18,10 @@ export default {
   computed: {
     zoomClipWrapStyle() {
       const { time, width } = this.currentUnit
-      const randomColor = Math.floor(Math.random() * 16777215).toString(16)
       // const unit = 15
       return {
         width: width * ((this.endTime - this.startTime) / time) + 'px',
         transform: `translateX(${(this.startTime / time) * width}px)`,
-        'background-color': '#' + randomColor,
       }
     },
   },
@@ -33,5 +31,14 @@ export default {
 <style scoped>
 .zoom-clip-wrap {
   position: absolute;
+  border: 2px solid #fff0f1;
+  height: 2.5rem;
+  background-color: #ccc;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.zoom-clip-wrap.selected {
+  border-color: #4103ef;
 }
 </style>

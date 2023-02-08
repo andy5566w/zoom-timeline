@@ -39,6 +39,13 @@
       >
         split
       </button>
+
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        @click="handleDelete"
+      >
+        delete
+      </button>
     </div>
     <section class="overflow-x-auto py-10 relative" v-on="v_on_container">
       <ZoomCurrentTimeThumb
@@ -51,11 +58,13 @@
 
       <div>
         <ZoomVideoClipItem
-          v-for="item in clipItems"
+          v-for="(item, index) in clipItems"
           v-bind="item"
           :current-unit="currentUnit"
           :video-end-time="videoData.originalDuration"
           :key="item.key"
+          :class="{ selected: timeLineData.selectedIndex === index }"
+          @click="handleSelectClipItem(index)"
         />
       </div>
     </section>
@@ -92,6 +101,7 @@ export default {
       ],
       currentIndex: 0,
       isClickCurrentTimeThumb: false,
+      selectedIndex: -1,
     }
 
     const videoData = {
@@ -146,6 +156,7 @@ export default {
         ...this.currentUnit,
         ...this.videoData,
         splitsArray: this.splitsArray,
+        selectedIndex: this.timeLineData.selectedIndex,
         ISOStringTime: new Date(this.videoData.originalDuration * 1000)
           .toISOString()
           .substring(11, 19),
@@ -196,6 +207,14 @@ export default {
       ) {
         this.offsetLeftDistance = event.offsetX <= 0 ? 0 : event.offsetX
       }
+    },
+    handleSelectClipItem(index) {
+      this.timeLineData.selectedIndex = index
+    },
+    handleDelete() {
+      this.splitsArray.splice(this.timeLineData.selectedIndex, 1)
+      this.timeLineData.selectedIndex = -1
+      // TODO 需要計算後續的變化
     },
     handleSplit() {
       const splitPoint = floor(

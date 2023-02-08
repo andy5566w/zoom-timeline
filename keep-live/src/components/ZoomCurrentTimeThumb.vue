@@ -44,5 +44,6 @@ export default {
   background-color: red;
   position: absolute;
   top: 0;
+  z-index: 5;
 }
 </style>
