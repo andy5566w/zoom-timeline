@@ -10,17 +10,6 @@
 
       <button
         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded decrease"
-        @click="timeLineData.currentIndex--"
-        :class="{
-          'opacity-50': timeLineData.currentIndex === 0,
-        }"
-        :disabled="timeLineData.currentIndex === 0"
-      >
-        -
-      </button>
-
-      <button
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded increase"
         :class="{
           'opacity-50':
             timeLineData.currentIndex === timeLineData.breakpoints.length - 1,
@@ -29,6 +18,17 @@
           timeLineData.currentIndex === timeLineData.breakpoints.length - 1
         "
         @click="timeLineData.currentIndex++"
+      >
+        -
+      </button>
+
+      <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded increase"
+        :class="{
+          'opacity-50': timeLineData.currentIndex === 0,
+        }"
+        :disabled="timeLineData.currentIndex === 0"
+        @click="timeLineData.currentIndex--"
       >
         +
       </button>
