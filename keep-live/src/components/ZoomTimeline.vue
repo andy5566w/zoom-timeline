@@ -60,6 +60,7 @@
         <ZoomVideoClipItem
           v-for="(item, index) in clipItems"
           v-bind="item"
+          ref="ZoomClipItem"
           :current-unit="currentUnit"
           :video-end-time="videoData.originalDuration"
           :key="item.key"
@@ -116,6 +117,7 @@ export default {
       videoData,
       box,
       splitsArray: [],
+      deleteArray: [],
       offsetLeftDistance: 200,
     }
   },
@@ -124,16 +126,23 @@ export default {
       return this.timeLineData.breakpoints[this.timeLineData.currentIndex]
     },
     clipItems() {
-      return this.splitsArray.reduce((a, c, index) => {
-        const key = Math.random().toString(16).slice(2)
-        if (index === 0) return a.concat({ startTime: 0, endTime: c, key })
-        else if (index === this.splitsArray.length - 1)
-          return a.concat({
-            startTime: a[index - 1].endTime,
-            endTime: floor(this.videoData.originalDuration, 2),
-            key,
-          })
-        return a.concat({ startTime: a[index - 1].endTime, endTime: c, key })
+      // TODO 改回data方式，deleteDistance可以改用累計的
+      let deleteDistance = 0
+      const _deleteArray = [...this.deleteArray]
+      _deleteArray.sort()
+      const { time, width } = this.currentUnit
+      return this.splitsArray.reduce((accumulator, currentValue, index) => {
+        if (_deleteArray[0] < currentValue) {
+          // width * ((this.endTime - this.startTime) / time)
+          deleteDistance += (_deleteArray.shift() / time) * width
+        }
+        console.log({ deleteDistance })
+        return accumulator.concat({
+          startTime: index === 0 ? 0 : accumulator[index - 1].endTime,
+          endTime: currentValue,
+          key: Math.random().toString(16).slice(2),
+          deleteDistance,
+        })
       }, [])
     },
     v_on_container() {
@@ -155,7 +164,8 @@ export default {
       return {
         ...this.currentUnit,
         ...this.videoData,
-        splitsArray: this.splitsArray,
+        splitsArray: this.splitsArray.join(' || '),
+        deleteArray: this.deleteArray.join(' || '),
         selectedIndex: this.timeLineData.selectedIndex,
         ISOStringTime: new Date(this.videoData.originalDuration * 1000)
           .toISOString()
@@ -212,9 +222,11 @@ export default {
       this.timeLineData.selectedIndex = index
     },
     handleDelete() {
-      this.splitsArray.splice(this.timeLineData.selectedIndex, 1)
+      if (this.timeLineData.selectedIndex === -1) return
+      this.deleteArray.push(
+        this.splitsArray.splice(this.timeLineData.selectedIndex, 1)
+      )
       this.timeLineData.selectedIndex = -1
-      // TODO 需要計算後續的變化
     },
     handleSplit() {
       const splitPoint = floor(
@@ -222,6 +234,7 @@ export default {
         2
       )
       if (!this.splitsArray.find((n) => n === splitPoint)) {
+        console.log({ splitPoint })
         this.splitsArray.push(splitPoint)
         this.splitsArray.sort()
       }

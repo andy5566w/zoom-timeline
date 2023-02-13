@@ -14,14 +14,20 @@ export default {
     currentUnit: Object,
     startTime: Number,
     endTime: Number,
+    deleteDistance: {
+      type: Number,
+      default: () => 0,
+    },
   },
   computed: {
     zoomClipWrapStyle() {
       const { time, width } = this.currentUnit
-      // const unit = 15
+      console.log(this.deleteDistance)
       return {
         width: width * ((this.endTime - this.startTime) / time) + 'px',
-        transform: `translateX(${(this.startTime / time) * width}px)`,
+        transform: `translateX(${
+          (this.startTime / time) * width - this.deleteDistance
+        }px)`,
       }
     },
   },
